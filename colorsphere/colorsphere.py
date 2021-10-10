@@ -1,4 +1,3 @@
-
 """
 xled.colorsphere
 ~~~~~~~~~~~~~~~~
@@ -17,10 +16,11 @@ function to call when the mouse moves. Both callback functions
 takes the hsl-coordinates under the mouse (or False if outside the
 sphere) and the click event as arguments.
 
-There is also an entrypoint launch_colorpicker, which takes a
-HighControlInterface object connected to some led lights as argument,
-and then shows a window with the color sphere. When the user picks a
-color in the sphere, it sets the color of the lights accordingly.
+For xled users, there is also an entrypoint xled_launcher, which takes
+a HighControlInterface object connected to some led lights as
+argument, and then shows a window with the color sphere. When the user
+picks a color in the sphere, it sets the color of the lights
+accordingly.
 
 The color sphere represents the whole color body, where one pole
 is black, the other pole is white, and the color circle is around the
@@ -45,8 +45,8 @@ import numpy as np
 from math import floor, sqrt, sin, cos, atan2, acos, pi
 import random
 
-from xled.ledcolor import get_color_style, hsl_color
-from xled.windowmgr import WindowMgr
+from .ledcolor import get_color_style, hsl_color
+from .windowmgr import WindowMgr
 
 
 brightness = [0.25, 0.54, 0.21]
@@ -201,7 +201,7 @@ class ColorSphere():
             self.im.set_array(arr)
             if not plt.isinteractive():
                 self.fig.canvas.draw()
-                
+
     def scroll_event(self, event):
         changed = False
         if event.key == "control":
@@ -360,64 +360,3 @@ class ColorPicker():
         self.sphere.mouse_color_callbacks.append(self.sample.set_color)
         if callback_move:
             self.sphere.mouse_color_callbacks.append(callback_move)
-
-
-# Below is an example application of the color picker.
-# Call launch_colorpicker with the HighControlInterface as argument.
-# Hover over the sphere to watch colors. Click on a color to upload
-# it as a movie.
-# You can provide your own click and move callbacks for other effects.
-
-
-global_cp = False
-rtmode = False
-outermode = False
-printcol = False
-
-
-def make_click_func(ctr):
-
-    def on_click(hsl, event):
-        global outermode
-        global printcol
-        if hsl:
-            pat = ctr.make_solid_pattern(hsl_color(*hsl))
-            id = ctr.upload_movie(ctr.to_movie(pat), 1, force=True)
-            ctr.set_movies_current(id)
-            if printcol:
-                print(hsl_color(*hsl))
-            outermode = 'movie'
-
-    return on_click
-
-
-def make_move_func(ctr):
-
-    def on_move(hsl, event):
-        global rtmode
-        global outermode
-        if hsl:
-            if not rtmode:
-                outermode = ctr.get_mode()['mode']
-            pat = ctr.make_solid_pattern(hsl_color(*hsl))
-            ctr.show_rt_frame(ctr.to_movie(pat))
-            rtmode = True
-        else:
-            if rtmode:
-                if outermode:
-                    ctr.set_mode(outermode)
-                rtmode = False
-
-    return on_move
-
-
-def launch_colorpicker(ctr, printcolor=False, fromshell=False):
-    global global_cp
-    global printcol
-    printcol = printcolor
-    global_cp = ColorPicker(make_click_func(ctr), make_move_func(ctr))
-    if fromshell:
-        plt.ioff()
-        plt.show()
-        if outermode:
-            ctr.set_mode(outermode)
