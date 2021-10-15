@@ -1,8 +1,9 @@
 from . colorsphere import ColorPicker
 from . ledcolor import hsl_color
+from dataclasses import dataclass
 from xled.control import HighControlInterface
 from xled.discover import discover
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pyplot
 
 
 # Below is an example application of the color picker.
@@ -12,62 +13,48 @@ import matplotlib.pyplot as plt
 # You can provide your own click and move callbacks for other effects.
 
 
-global_cp = False
-rtmode = False
-outermode = False
-printcol = False
+@dataclass
+class XledCallbacks:
+    ip_address: object = None
+    rtmode: bool = False
+    outermode: bool = False
+    printcol: bool = False
 
+    def __post_init__(self):
+        self.ip_address = self.ip_address or discover().ip_address
+        self.ctr = HighControlInterface(self.ip_address)
 
-def make_click_func(ctr):
-
-    def on_click(hsl, event):
-        global outermode
-        global printcol
+    def on_click(self, hsl, event):
         if hsl:
-            pat = ctr.make_solid_pattern(hsl_color(*hsl))
-            id = ctr.upload_movie(ctr.to_movie(pat), 1, force=True)
-            ctr.set_movies_current(id)
-            if printcol:
+            pat = self.ctr.make_solid_pattern(hsl_color(*hsl))
+            id = self.ctr.upload_movie(self.ctr.to_movie(pat), 1, force=True)
+            self.ctr.set_movies_current(id)
+            if self.printcol:
                 print(hsl_color(*hsl))
-            outermode = 'movie'
+            self.outermode = 'movie'
 
-    return on_click
-
-
-def make_move_func(ctr):
-
-    def on_move(hsl, event):
-        global rtmode
-        global outermode
+    def on_move(self, hsl, event):
         if hsl:
-            if not rtmode:
-                outermode = ctr.get_mode()['mode']
-            pat = ctr.make_solid_pattern(hsl_color(*hsl))
-            ctr.show_rt_frame(ctr.to_movie(pat))
-            rtmode = True
+            if not self.rtmode:
+                self.outermode = self.ctr.get_mode()['mode']
+            pat = self.ctr.make_solid_pattern(hsl_color(*hsl))
+            self.ctr.show_rt_frame(self.ctr.to_movie(pat))
+            self.rtmode = True
         else:
-            if rtmode:
-                if outermode:
-                    ctr.set_mode(outermode)
-                rtmode = False
+            if self.rtmode:
+                if self.outermode:
+                    self.ctr.set_mode(self.outermode)
+                self.rtmode = False
 
-    return on_move
+    def launch(self, from_shell):
+        self.colorpicker = ColorPicker(self.on_click, self.on_move)
+        if from_shell:
+            pyplot.ioff()
+            pyplot.show()
+            if self.outermode:
+                self.ctr.set_mode(self.outermode)
 
-
-def launch_colorpicker(ctr, printcolor=False, fromshell=False):
-    global global_cp
-    global printcol
-    printcol = printcolor
-    global_cp = ColorPicker(make_click_func(ctr), make_move_func(ctr))
-    if fromshell:
-        plt.ioff()
-        plt.show()
-        if outermode:
-            ctr.set_mode(outermode)
 
 
 if __name__ == '__main__':
-    dev = discover()
-    ctr = HighControlInterface(dev.ip_address)
-
-    launch_colorpicker(ctr, True, True)
+    x = XledCallbacks().launch(from_shell=True)
