@@ -57,4 +57,12 @@ class XledCallbacks:
 
 
 if __name__ == '__main__':
-    x = XledCallbacks().launch(from_shell=True)
+    from_shell = False
+
+    XledCallbacks().launch(from_shell=from_shell)
+
+    if not from_shell:
+        import time
+        for i in range(20):
+            time.sleep(0.5)
+            print(i)
