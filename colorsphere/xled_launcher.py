@@ -1,6 +1,6 @@
 from . colorsphere import ColorPicker
 from . ledcolor import hsl_color
-from dataclasses import dataclass
+#from dataclasses import dataclass
 from xled.control import HighControlInterface
 from xled.discover import discover
 import matplotlib.pyplot as pyplot
@@ -13,14 +13,15 @@ import matplotlib.pyplot as pyplot
 # You can provide your own click and move callbacks for other effects.
 
 
-@dataclass
+#@dataclass
 class XledCallbacks:
-    ip_address: object = None
-    rtmode: bool = False
-    outermode: bool = False
-    printcol: bool = False
+    ip_address = None
+    rtmode = False
+    outermode = False
+    printcol = False
+    printcolhsl = True
 
-    def __post_init__(self):
+    def __init__(self):
         self.ip_address = self.ip_address or discover().ip_address
         self.ctr = HighControlInterface(self.ip_address)
 
@@ -31,6 +32,8 @@ class XledCallbacks:
             self.ctr.set_movies_current(id)
             if self.printcol:
                 print(hsl_color(*hsl))
+            elif self.printcolhsl:
+                print(hsl)
             self.outermode = 'movie'
 
     def on_move(self, hsl, event):
@@ -51,18 +54,33 @@ class XledCallbacks:
         if from_shell:
             pyplot.ioff()
             pyplot.show()
-            if self.outermode:
-                self.ctr.set_mode(self.outermode)
-
 
 
 if __name__ == '__main__':
-    from_shell = False
+    from_shell = True
 
-    XledCallbacks().launch(from_shell=from_shell)
+    if from_shell is True:
+        XledCallbacks().launch(from_shell=from_shell)
 
-    if not from_shell:
+    elif from_shell == 'subprocess':
         import time
-        for i in range(20):
-            time.sleep(0.5)
+        from threading import Timer
+
+        def func1():
+            xlc = XledCallbacks()
+            xlc.launch(from_shell=False)
+            xlc.colorpicker.win.add_close_callback(lambda *args: xlc.colorpicker.win.fig.canvas.stop_event_loop())
+            xlc.colorpicker.win.fig.canvas.start_event_loop(0)
+        
+        tmr = Timer(0.0, func1)
+        tmr.start()
+
+        for i in range(30):
+            time.sleep(1.0)
+            print(i)
+
+    else:
+        XledCallbacks().launch(from_shell=from_shell)
+        for i in range(30):
+            pyplot.pause(1.0)
             print(i)
