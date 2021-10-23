@@ -333,11 +333,11 @@ class ColorSample():
 
 class ColorPicker():
 
-    def __init__(self, callback_click, callback_move):
+    def __init__(self, callback_click, callback_move, name="Color Sphere"):
         width = 500
         height = 500
         rect = (0.1, 0.1, 0.8, 0.8)
-        self.win = WindowMgr("xled color picker", width, height, 1, 1)
+        self.win = WindowMgr(name, width, height, 1, 1)
         self.win.set_background(hsl_color_im(0.0, 0.0, 0.0))
         self.sphere = ColorSphere(self.win.fig, rect, width, height, self.win.pixpt, callback_click, True)
         self.sample = ColorSample(self.win.fig, (0.04, 0.04, 0.16, 0.16), 2*self.win.pixpt, hsl_color_im(0.0, 0.0, 1.0))
