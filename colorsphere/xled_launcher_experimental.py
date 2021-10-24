@@ -4,6 +4,7 @@ from . ledcolor import hsl_color
 from xled.control import HighControlInterface
 from xled.discover import discover
 import matplotlib.pyplot as pyplot
+import sys
 
 
 # Below is an example application of the color picker.
@@ -18,8 +19,8 @@ class XledCallbacks:
     ip_address = None
     rtmode = False
     outermode = False
-    printrgb = False
-    printhsl = False
+    printcol = False
+    printcolhsl = True
 
     def __init__(self):
         self.ip_address = self.ip_address or discover().ip_address
@@ -30,9 +31,9 @@ class XledCallbacks:
             pat = self.ctr.make_solid_pattern(hsl_color(*hsl))
             id = self.ctr.upload_movie(self.ctr.to_movie(pat), 1, force=True)
             self.ctr.set_movies_current(id)
-            if self.printrgb:
+            if self.printcol:
                 print(hsl_color(*hsl))
-            elif self.printhsl:
+            elif self.printcolhsl:
                 print(hsl)
             self.outermode = 'movie'
 
@@ -49,15 +50,38 @@ class XledCallbacks:
                     self.ctr.set_mode(self.outermode)
                 self.rtmode = False
 
-    def launch(self, from_shell=False, printrgb=False, printhsl=False):
-        self.printrgb = printrgb
-        self.printhsl = printhsl
-        self.colorpicker = ColorPicker(self.on_click, self.on_move, name="Xled Color Picker")
-        if from_shell:
-            self.colorpicker.win.add_close_callback(lambda *args: self.colorpicker.win.fig.canvas.stop_event_loop())
-            self.colorpicker.win.fig.canvas.start_event_loop(0)
+    def launch(self):
+        self.colorpicker = ColorPicker(self.on_click, self.on_move)
 
 
 if __name__ == '__main__':
 
-    XledCallbacks().launch(from_shell=True)
+    variant = sys.argv[1] if len(sys.argv)>1 else None
+
+    if variant == 'foreground':
+        XledCallbacks().launch()
+        pyplot.ioff()
+        pyplot.show()
+
+    elif variant == 'subprocess':
+        import time
+        from threading import Timer
+
+        def func1():
+            xlc = XledCallbacks()
+            xlc.launch()
+            xlc.colorpicker.win.add_close_callback(lambda *args: xlc.colorpicker.win.fig.canvas.stop_event_loop())
+            xlc.colorpicker.win.fig.canvas.start_event_loop(0)
+        
+        tmr = Timer(0.0, func1)
+        tmr.start()
+
+        for i in range(30):
+            time.sleep(1.0)
+            print(i)
+
+    else:
+        XledCallbacks().launch()
+        for i in range(30):
+            pyplot.pause(1.0)
+            print(i)
