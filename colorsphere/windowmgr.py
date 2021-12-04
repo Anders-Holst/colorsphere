@@ -1,4 +1,3 @@
-
 """
 xled.windowmgr
 ~~~~~~~~~~~~~~
@@ -15,11 +14,11 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 mpl.interactive(True)
-mpl.rcParams['toolbar'] = 'None'
+mpl.rcParams["toolbar"] = "None"
 
 
-class WindowMgr():
-    def __init__(self, name, width, height, numx, numy, marg=0, dir='horizontal'):
+class WindowMgr:
+    def __init__(self, name, width, height, numx, numy, marg=0, dir="horizontal"):
         self.maxind = (numx, numy)
         self.dir = dir
         self.dxm = marg / width
@@ -37,14 +36,14 @@ class WindowMgr():
         self.fig = plt.figure(name)
         self.pixpt = 72.0 / self.fig.dpi
         self.fig.set_size_inches((width / self.fig.dpi, height / self.fig.dpi))
-        self.fig.canvas.mpl_connect('key_press_event', self.key_press_callback)
-        self.fig.canvas.mpl_connect('key_release_event', self.key_release_callback)
-        self.fig.canvas.mpl_connect('scroll_event', self.scroll_callback)
-        self.fig.canvas.mpl_connect('button_press_event', self.button_press_callback)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.button_motion_callback)
-        self.fig.canvas.mpl_connect('button_release_event', self.button_release_callback)
-        self.fig.canvas.mpl_connect('resize_event', self.resize_callback)
-        self.fig.canvas.mpl_connect('close_event', self.close_callback)
+        self.fig.canvas.mpl_connect("key_press_event", self.key_press_callback)
+        self.fig.canvas.mpl_connect("key_release_event", self.key_release_callback)
+        self.fig.canvas.mpl_connect("scroll_event", self.scroll_callback)
+        self.fig.canvas.mpl_connect("button_press_event", self.button_press_callback)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.button_motion_callback)
+        self.fig.canvas.mpl_connect("button_release_event", self.button_release_callback)
+        self.fig.canvas.mpl_connect("resize_event", self.resize_callback)
+        self.fig.canvas.mpl_connect("close_event", self.close_callback)
 
     def get_figure(self):
         return self.fig
@@ -56,8 +55,13 @@ class WindowMgr():
         (nx, ny) = self.nextind
         if nx < 0 or ny < 0:
             return False
-        rect = (nx * self.dx + self.dxm, 1.0 - (ny + 1) * self.dy, self.dx - self.dxm, self.dy - self.dym)
-        if self.dir == 'vertical':
+        rect = (
+            nx * self.dx + self.dxm,
+            1.0 - (ny + 1) * self.dy,
+            self.dx - self.dxm,
+            self.dy - self.dym,
+        )
+        if self.dir == "vertical":
             ny += 1
             if ny >= self.maxind[1]:
                 ny = 0
@@ -93,7 +97,12 @@ class WindowMgr():
     def get_callback_target(self, event):
         pos = self.fig.transFigure.inverted().transform((event.x, event.y))
         for rect in self.targetdict:
-            if pos[0] >= rect[0] and pos[0] < rect[0] + rect[2] and pos[1] >= rect[1] and pos[1] < rect[1] + rect[3]:
+            if (
+                pos[0] >= rect[0]
+                and pos[0] < rect[0] + rect[2]
+                and pos[1] >= rect[1]
+                and pos[1] < rect[1] + rect[3]
+            ):
                 return self.targetdict[rect]
         return None
 
@@ -105,29 +114,29 @@ class WindowMgr():
             self.globalkeydict[event.key]()
         else:
             self.lastkeytarget = self.get_callback_target(event)
-            if self.lastkeytarget is not None and 'key_press_event' in dir(self.lastkeytarget):
+            if self.lastkeytarget and "key_press_event" in dir(self.lastkeytarget):
                 self.lastkeytarget.key_press_event(event)
 
     def key_release_callback(self, event):
         # The release goes to the same target as the press
-        if self.lastkeytarget is not None and 'key_release_event' in dir(self.lastkeytarget):
+        if self.lastkeytarget and "key_release_event" in dir(self.lastkeytarget):
             self.lastkeytarget.key_release_event(event)
 
     def scroll_callback(self, event):
         # Scrolls are special - no release
         target = self.get_callback_target(event)
-        if target is not None and 'scroll_event' in dir(target):
+        if target and "scroll_event" in dir(target):
             target.scroll_event(event)
 
     def button_press_callback(self, event):
         self.lastbuttontarget = self.get_callback_target(event)
-        if self.lastbuttontarget is not None and 'button_press_event' in dir(self.lastbuttontarget):
+        if self.lastbuttontarget and "button_press_event" in dir(self.lastbuttontarget):
             self.lastbuttontarget.button_press_event(event)
 
     def button_motion_callback(self, event):
         # The motion goes to the same target as the press.
         # Only motion events while pressed, unless specific motion callback
-        if self.lastbuttontarget is not None and 'motion_notify_event' in dir(self.lastbuttontarget):
+        if self.lastbuttontarget and "motion_notify_event" in dir(self.lastbuttontarget):
             self.lastbuttontarget.motion_notify_event(event)
         elif self.motion_hook:
             for func in self.motion_hook:
@@ -137,7 +146,7 @@ class WindowMgr():
         # The release goes to the same target as the press
         target = self.lastbuttontarget
         self.lastbuttontarget = None
-        if target is not None and 'button_release_event' in dir(target):
+        if target and "button_release_event" in dir(target):
             target.button_release_event(event)
 
     def resize_callback(self, event):
