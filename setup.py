@@ -1,4 +1,4 @@
-__version__ = '0.9.0'
+__version__ = '0.1.0'
 
 _classifiers = [
     'Development Status :: 4 - Beta',
@@ -26,7 +26,7 @@ def _run_setup():
         version=__version__,
         author='Anders Holst',
         author_email='anders.holst@ri.se',
-        url='https://github.com/rec/colorsphere',
+        url='https://github.com/Anders-Holst/colorsphere',
         py_modules=['colorsphere'],
         description='Select colors on a 3D sphere',
         long_description=open('README.md').read(),

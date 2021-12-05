@@ -6,21 +6,12 @@ Author: Anders Holst (anders.holst@ri.se), 2021
 
 This module implements an interactive 3-dimensional color picker -
 to the author's knowledge the first ever 3-dimensional color picker.
-It can be connected directly to controlling the led lights by a
-suitable callback function. One simple example callback function is
-provided.
 
 The main entrypoint is the class ColorPicker, which takes one callback
 function to call whenever a color is clicked, and another callback
 function to call when the mouse moves. Both callback functions
 takes the hsl-coordinates under the mouse (or False if outside the
 sphere) and the click event as arguments.
-
-For xled users, there is also an entrypoint xled_launcher, which takes
-a HighControlInterface object connected to some led lights as
-argument, and then shows a window with the color sphere. When the user
-picks a color in the sphere, it sets the color of the lights
-accordingly.
 
 The color sphere represents the whole color body, where one pole
 is black, the other pole is white, and the color circle is around the
