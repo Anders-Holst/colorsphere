@@ -19,8 +19,7 @@ scrolling goes sideways. Control scrolling goes inside the spere.
 In the default usage, clicking a color in the sphere will print out
 its RGB and HSL (hue, saturation, lightness) color coordinates.
 
-Installs with 'pip install colorsphere'
-Or, to install from this directory:
+Installs with 'pip install colorsphere'. Or, to install from this directory:
 
 1. Create a new virtualenv
 2. `python setup.py install`
@@ -30,4 +29,4 @@ To run standalone from a terminal:
 `python -m colorsphere`
 
 You can also use the ColorSphere or ColorPicker class in your own
-programs, but that require some more programming of course.
+programs, but that requires some more programming of course.
