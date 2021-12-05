@@ -1,6 +1,6 @@
 """
-xled.windowmgr
-~~~~~~~~~~~~~~
+colorsphere.windowmgr
+~~~~~~~~~~~~~~~~~~~~~
 
 Author: Anders Holst (anders.holst@ri.se), 2021
 

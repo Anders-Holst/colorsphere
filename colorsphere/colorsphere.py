@@ -1,6 +1,6 @@
 """
-xled.colorsphere
-~~~~~~~~~~~~~~~~
+colorsphere.colorsphere
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Author: Anders Holst (anders.holst@ri.se), 2021
 
@@ -112,12 +112,16 @@ class ColorSphere:
         self.color_style = ["8col", "equilight"]
 
     def set_color_style(self, style):
-        if style in ["linear", "equilight"]:
+        if type(style) in [list, tuple] and len(style) == 2:
+            self.color_style[0] = style[0]
+            self.color_style[1] = style[1]
+        elif style in ["linear", "equilight"]:
             self.color_style[1] = style
         elif style in self.ramp_n:
             self.color_style[0] = style
         for func in self.color_style_callbacks:
             func(self.color_style)
+        self.draw()
 
     def hsl_color(self, hue, sat, light):
         tmp = hue * self.ramp_n[self.color_style[0]]
