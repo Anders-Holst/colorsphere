@@ -8,6 +8,7 @@ This is a helper-module to create simple interactive interfaces in python,
 consisting of a single window with several sub-windows or widgets inside.
 It takes care of event handling and dispatches the events to the appropriate
 widgets.
+
 """
 
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ class WindowMgr:
         self.dx = (1.0 - self.dxm) / self.maxind[0]
         self.dy = (1.0 - self.dym) / self.maxind[1]
         self.nextind = (0, 0)
-        self.targetdict = {}
+        self.targetlist = []
         self.lastkeytarget = None
         self.lastbuttontarget = None
         self.motion_hook = []
@@ -36,6 +37,7 @@ class WindowMgr:
         self.fig = plt.figure(name)
         self.pixpt = 72.0 / self.fig.dpi
         self.fig.set_size_inches((width / self.fig.dpi, height / self.fig.dpi))
+        self.disable_default_keys()
         self.fig.canvas.mpl_connect("key_press_event", self.key_press_callback)
         self.fig.canvas.mpl_connect("key_release_event", self.key_release_callback)
         self.fig.canvas.mpl_connect("scroll_event", self.scroll_callback)
@@ -78,9 +80,6 @@ class WindowMgr:
         self.nextind = (nx, ny)
         return rect
 
-    def register_target(self, rect, target):
-        self.targetdict[rect] = target
-
     def add_motion_callback(self, func):
         self.motion_hook.append(func)
 
@@ -90,20 +89,31 @@ class WindowMgr:
     def add_close_callback(self, func):
         self.close_hook.append(func)
 
+    def register_target(self, rect, target):
+        self.targetlist.append((rect, target))
+
+    def unregister_target(self, target):
+        self.targetlist = [(r, t) for (r, t) in self.targetlist if t is not target]
+
+    def update_target(self, rect, target):
+        for i in range(len(self.targetlist)):
+            if self.targetlist[i][1] is target:
+                self.targetlist[i] = (rect, target)
+
     def clear_targets(self):
-        self.targetdict = {}
+        self.targetlist = []
         self.nextind = (0, 0)
 
     def get_callback_target(self, event):
         pos = self.fig.transFigure.inverted().transform((event.x, event.y))
-        for rect in self.targetdict:
+        for (rect, target) in self.targetlist:
             if (
                 pos[0] >= rect[0]
                 and pos[0] < rect[0] + rect[2]
                 and pos[1] >= rect[1]
                 and pos[1] < rect[1] + rect[3]
             ):
-                return self.targetdict[rect]
+                return target
         return None
 
     def install_key_action(self, key, func):
@@ -158,3 +168,16 @@ class WindowMgr:
         if self.close_hook:
             for func in self.close_hook:
                 func(event)
+
+    def disable_default_keys(self):
+        mpl.rcParams['keymap.xscale'] = []
+        mpl.rcParams['keymap.yscale'] = []
+        mpl.rcParams['keymap.grid'] = []
+        mpl.rcParams['keymap.grid_minor'] = []
+
+    def start_event_loop(self):
+        self.add_close_callback(self.exit_event_loop)
+        self.fig.canvas.start_event_loop(0)
+
+    def exit_event_loop(self, *args):
+        self.fig.canvas.stop_event_loop()

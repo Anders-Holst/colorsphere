@@ -114,6 +114,12 @@ class ColorSphere:
             func(self.color_style)
         self.draw()
 
+    def colorgamma(self, x):
+        return (pow(x, 1.0 / 2.4) * 1.055 - 0.055) if x > 0.0031308 else x * 12.92
+
+    def invcolorgamma(self, x):
+        return pow((x + 0.055) / 1.055, 2.4) if x > 0.04045 else x / 12.92
+
     def hsl_color(self, hue, sat, light):
         tmp = hue * self.ramp_n[self.color_style[0]]
         hind = int(floor(tmp))
@@ -141,7 +147,7 @@ class ColorSphere:
             t2 = max(0.0, ll - t1 * br)
         t1 = sat * t1
         t2 = sat * t2 + ll * (1.0 - sat)
-        return tuple(map(lambda c: pow(max(0.0, min(1.0, c * t1 + t2)), 0.417), rgb))
+        return tuple(map(lambda c: self.colorgamma(max(0.0, min(1.0, c * t1 + t2))), rgb))
 
     def rotxmatrix(self, ang):
         sa = sin(ang)
@@ -194,6 +200,20 @@ class ColorSphere:
         changed = False
         if event.key == "control":
             if event.button == "up":
+                self.eye = self.eye * self.rotxmatrix(-5.0 * pi / 180.0)
+                changed = True
+            elif event.button == "down":
+                self.eye = self.eye * self.rotxmatrix(5.0 * pi / 180.0)
+                changed = True
+        elif event.key == "shift":
+            if event.button == "up":
+                self.eye = self.eye * self.rotymatrix(-5.0 * pi / 180.0)
+                changed = True
+            elif event.button == "down":
+                self.eye = self.eye * self.rotymatrix(5.0 * pi / 180.0)
+                changed = True
+        else:
+            if event.button == "up":
                 if self.rad < 1.0:
                     self.rad = min(1.0, self.rad + 0.01)
                     changed = True
@@ -201,20 +221,6 @@ class ColorSphere:
                 if self.rad > 0.01:
                     self.rad = max(0.01, self.rad - 0.01)
                     changed = True
-        elif event.key == "shift":
-            if event.button == "up":
-                self.eye = self.eye * self.rotxmatrix(-5.0 * pi / 180.0)
-                changed = True
-            elif event.button == "down":
-                self.eye = self.eye * self.rotxmatrix(5.0 * pi / 180.0)
-                changed = True
-        else:
-            if event.button == "up":
-                self.eye = self.eye * self.rotymatrix(-5.0 * pi / 180.0)
-                changed = True
-            elif event.button == "down":
-                self.eye = self.eye * self.rotymatrix(5.0 * pi / 180.0)
-                changed = True
         if changed:
             self.draw(event)
 
@@ -268,7 +274,21 @@ class ColorSphere:
                 self.fig.canvas.draw()
 
     def key_press_event(self, event):
-        pass
+        changed = False
+        if event.key == "right":
+            self.eye = self.eye * self.rotxmatrix(-5.0 * pi / 180.0)
+            changed = True
+        elif event.key == "left":
+            self.eye = self.eye * self.rotxmatrix(5.0 * pi / 180.0)
+            changed = True
+        elif event.key == "up":
+            self.eye = self.eye * self.rotymatrix(-5.0 * pi / 180.0)
+            changed = True
+        elif event.key == "down":
+            self.eye = self.eye * self.rotymatrix(5.0 * pi / 180.0)
+            changed = True
+        if changed:
+            self.draw(event)
 
     def calc_coordinates_color_array(self):
         x = self.xxarr
@@ -320,7 +340,8 @@ class ColorSphere:
         rgb = np.add(np.multiply(rgb, t1), t2)
         rgb = (rgb + 1.0 - np.abs(rgb - 1.0)) / 2.0
         rgb = (rgb + np.abs(rgb)) / 2.0
-        rgb = np.power(rgb, 0.417)
+        #rgb = np.power(rgb, 0.417)
+        rgb = np.where(rgb>0.0031308, np.power(rgb, 1.0/2.4)*1.055 - 0.055, rgb*12.92)
         return np.array(rgb.transpose()).reshape((101, 101, 3))
 
 
