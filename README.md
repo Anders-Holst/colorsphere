@@ -13,11 +13,13 @@ the sphere between the poles contains all grays from black to
 white. Thus, the hue is represented by the longitude, the lightness by
 the latitude, and the saturation by the proportion from the surface to
 the center black-white axis of the sphere. You can rotate the sphere
-either by dragging the surface, or using the scroll wheel. Shift-
-scrolling goes sideways. Control scrolling goes inside the spere.
+either by dragging the surface, or using the arrow keys. The scroll
+wheel takes you inside the sphere.
 
 In the default usage, clicking a color in the sphere will print out
 its RGB and HSL (hue, saturation, lightness) color coordinates.
+However, the main purpose is to use it as a color picker from within
+other python programs.
 
 Installs with 'pip install colorsphere'. Or, to install from this directory:
 
@@ -28,5 +30,6 @@ To run standalone from a terminal:
 
 `python -m colorsphere`
 
-You can also use the ColorSphere or ColorPicker class in your own
-programs, but that requires some more programming of course.
+You can also use the ColorSphere in your own programs, but that requires
+some more programming of course. Use the ColorPicker class as an example.
+There are some additional widgets in colorwidgets.py which may come in handy.
