@@ -287,6 +287,9 @@ class ColorSphere:
         elif event.key == "down":
             self.eye = self.eye * self.rotymatrix(5.0 * pi / 180.0)
             changed = True
+        elif event.key == "home":
+            self.eye = self.origmatrix()
+            changed = True
         if changed:
             self.draw(event)
 

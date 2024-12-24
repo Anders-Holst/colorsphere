@@ -70,7 +70,7 @@ class CCSample(CCWidget):
         self.oldhsl = None
         self.dragpos = False
         self.sqr = plt.Rectangle(
-            (0, 0), 1.0, 1.0, linewidth=8*self.get_pixpt(), edgecolor=(0, 0, 0), facecolor=bg
+            (0, 0), 1.0, 1.0, linewidth=2*self.get_pixpt(), edgecolor=(0, 0, 0), facecolor=bg
         )
         self.sqr2 = plt.Rectangle(
             (0, 0), 1.0, 1.0, linewidth=0, edgecolor=(0, 0, 0), fill=False
@@ -82,7 +82,7 @@ class CCSample(CCWidget):
         self.sqr2.remove()
         self.sqr.remove()
         self.ax.remove()
-        
+
     def set_color(self, hsl, ev=None):
         if hsl:
             self.hsl = hsl
@@ -129,10 +129,12 @@ class CCSample(CCWidget):
 
 
 class CCEffect(CCWidget):
-    def __init__(self, fig, rect, bg, label, func1, func2, data):
+    def __init__(self, fig, rect, bg, label, toggle, func1, func2, data=None, condition_func=None):
         super(CCEffect, self).__init__(fig, rect)
+        self.toggle = toggle
         self.func1 = func1
         self.func2 = func2
+        self.condfunc = condition_func
         self.data = data
         self.label = label
         self.gr0 = bg
@@ -158,6 +160,7 @@ class CCEffect(CCWidget):
         self.ax.add_artist(self.circ4)
         self.ax.add_artist(self.txt)
         self.pressed = False
+        self.active = True
         self.resize()
         self.redraw()
 
@@ -188,26 +191,52 @@ class CCEffect(CCWidget):
             self.circ1.set_facecolor(self.gr0)
             self.txt.set_position((0.5, 0.5))
 
+    def update_cond(self):
+        if self.condfunc:
+            if self.condfunc(self.data):
+                if not self.active:
+                    self.active = True
+                    self.txt.set_color((0, 0, 0))
+            else:
+                if self.active:
+                    self.active = False
+                    self.txt.set_color(self.gr1)
+
+    def unpress(self):
+        self.pressed = False
+        self.redraw()
+
     def button_press_event(self, event):
-        if self.pressed:
+        if not self.active:
+            return
+        if self.pressed and self.toggle:
             self.pressed = False
         else:
             self.pressed = True
             self.redraw()
-            self.refresh()
-            self.func1(self, self.data)
+            if self.func1:
+                self.refresh()
+                self.func1(self.data)
 
     def button_release_event(self, event):
-        if not self.pressed:
-            self.func2(self, self.data)
+        if not self.active:
+            return
+        if not self.pressed or not self.toggle:
+            self.pressed = False
+            if self.func2:
+                self.func2(self.data)
             self.redraw()
 
 
 class CCButton(CCWidget):
-    def __init__(self, fig, rect, bg, label, func):
+    def __init__(self, fig, rect, bg, label, toggle, func1, func2, data=None, condition_func=None):
         super(CCButton, self).__init__(fig, rect)
+        self.toggle = toggle
+        self.func1 = func1
+        self.func2 = func2
+        self.condfunc = condition_func
+        self.data = data
         self.label = label
-        self.func = func
         self.gr0 = bg
         self.gr1 = gray(0.25)
         self.gr2 = gray(0.4)
@@ -231,6 +260,8 @@ class CCButton(CCWidget):
         self.ax.add_artist(self.pa3)
         self.ax.add_artist(self.pa4)
         self.ax.add_artist(self.txt)
+        self.pressed = False
+        self.active = True
         self.resize()
 
     def make_path(self, marg, rnd, off, ar):
@@ -264,30 +295,58 @@ class CCButton(CCWidget):
         self.pa4.set_linewidth(dpix*self.get_pixpt() / 1.5)
         self.txt.set_fontsize(self.size/4*self.get_pixpt())
     
-    def redraw(self, pressed):
-        if pressed:
+    def redraw(self):
+        if self.pressed:
             self.pa1.set_facecolor(self.gr4)
             self.txt.set_position((0.5, 0.5 + self.toff))
         else:
             self.pa1.set_facecolor(self.gr0)
             self.txt.set_position((0.5, 0.5))
-    
+
+    def update_cond(self):
+        if self.condfunc:
+            if self.condfunc(self.data):
+                if not self.active:
+                    self.active = True
+                    self.txt.set_color((0, 0, 0))
+            else:
+                if self.active:
+                    self.active = False
+                    self.txt.set_color(self.gr1)
+
     def button_press_event(self, event):
-        self.redraw(True)
-        self.refresh()
-        self.func()
+        if not self.active:
+            return
+        if self.pressed and self.toggle:
+            self.pressed = False
+        else:
+            self.pressed = True
+            self.redraw()
+            if self.func1:
+                self.refresh()
+                self.func1(self.data)
+                if not self.func2 and not self.toggle: # Release may be lost
+                    self.pressed = False
+                    self.redraw()
 
     def button_release_event(self, event):
-        self.redraw(False)
+        if not self.active:
+            return
+        if not self.pressed or not self.toggle:
+            self.pressed = False
+            if self.func2:
+                self.func2(self.data)
+            self.redraw()
 
 
 class CCGlyph(CCWidget):
-    def __init__(self, fig, rect, pathdescr, func1, func2, toggle=False):
+    def __init__(self, fig, rect, pathdescr, toggle, func1, func2, data=None):
         super(CCGlyph, self).__init__(fig, rect)
         self.descr = pathdescr
+        self.toggle = toggle
         self.func1 = func1
         self.func2 = func2
-        self.toggle = toggle
+        self.data = data
         self.pressed = False
         self.gr1 = gray(0.25)
         self.gr2 = gray(0.4)
@@ -340,9 +399,9 @@ class CCGlyph(CCWidget):
         for pa in [self.pa2, self.pa3]:
             pa.set_linewidth(dpix*self.get_pixpt())
         self.pa4.set_linewidth(dpix*self.get_pixpt()) #  / 1.5
-    
-    def redraw(self, pressed):
-        if pressed:
+
+    def redraw(self):
+        if self.pressed:
             self.pa2.set_edgecolor(self.gr3)
             self.pa3.set_edgecolor(self.gr1)
         else:
@@ -354,17 +413,17 @@ class CCGlyph(CCWidget):
             self.pressed = False
         else:
             self.pressed = True
-            self.redraw(True)
+            self.redraw()
             if self.func1:
                 self.refresh()
-                self.func1()
+                self.func1(self.data)
 
     def button_release_event(self, event):
         if not self.toggle or not self.pressed:
             self.pressed = False
-            self.redraw(False)
+            self.redraw()
             if self.func2:
                 self.refresh()
-                self.func2()
+                self.func2(self.data)
 
 
